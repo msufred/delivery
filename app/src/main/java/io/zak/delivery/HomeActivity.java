@@ -71,7 +71,7 @@ public class HomeActivity extends AppCompatActivity {
          });
 
          cardProducts.setOnClickListener(v -> {
-             // TODO
+             startActivity(new Intent(this, ProductsActivity.class));
          });
     }
 
