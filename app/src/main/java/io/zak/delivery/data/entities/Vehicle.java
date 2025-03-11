@@ -10,8 +10,9 @@ import androidx.room.PrimaryKey;
 @Entity(tableName = "vehicles")
 public class Vehicle {
     @PrimaryKey
-    public int id;
-    public String name;
+    public int vehicleId;
+    public String vehicleName;
+    public String vehicleType;
     public String plateNo;
-    public String status;
+    public String vehicleStatus;
 }
