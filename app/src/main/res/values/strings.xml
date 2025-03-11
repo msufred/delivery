@@ -8,6 +8,7 @@
     <string name="fab">fab</string>
     <string name="button">button</string>
     <string name="qrcode">QR Code</string>
+    <string name="recycler_view">Recycler View</string>
 
     <!-- Fields -->
     <string name="username">Username</string>
@@ -69,8 +70,6 @@
     <string name="user_details">User Details</string>
 
     <!-- warehouse related -->
-    <string name="stocks">Stocks</string>
-
     <string name="warehouse">Warehouse</string>
     <string name="add_warehouse">Add Warehouse</string>
     <string name="edit_warehouse">Edit Warehouse</string>
@@ -121,6 +120,7 @@
 
     <!-- product related -->
     <string name="add_product">Add Product</string>
+    <string name="scan_product">Scan Product</string>
     <string name="edit_product">Edit Product</string>
     <string name="product_details">Product Details</string>
     <string name="product_name">Product Name</string>
@@ -155,6 +155,10 @@
     <string name="checkout">Checkout</string>
     <string name="complete_delivery">Complete Delivery</string>
     <string name="delivered">Delivered</string>
+
+    <!-- stock related -->
+    <string name="stocks">Stocks</string>
+    <string name="scan_stock">Scan Stock</string>
 
     <!-- order related -->
     <string name="order_details">Order Details</string>
