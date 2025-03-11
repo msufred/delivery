@@ -1,0 +1,215 @@
+<resources>
+    <string name="app_name">delivery</string>
+    <string name="app_version">0.0.1-Debug</string>
+
+    <!-- Content Descriptions -->
+    <string name="app_logo">App Logo</string>
+    <string name="vector">vector</string>
+    <string name="fab">fab</string>
+    <string name="button">button</string>
+    <string name="qrcode">QR Code</string>
+
+    <!-- Fields -->
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="reenter_password">Re-Enter Password</string>
+    <string name="first_name">First Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="full_name">Full Name</string>
+    <string name="name">Name</string>
+    <string name="address">Address</string>
+    <string name="current_address">Current Address</string>
+    <string name="business_address">Business Address</string>
+    <string name="no_address">No Address</string>
+    <string name="contact">Contact</string>
+    <string name="contact_no">Contact No.</string>
+    <string name="no_contact_no">No Contact No.</string>
+    <string name="phone_or_mobile">Phone/Mobile No.</string>
+    <string name="email">Email</string>
+    <string name="email_address">Email Address</string>
+    <string name="no_email">No Email</string>
+    <string name="position">Position</string>
+    <string name="no_position">No Position</string>
+    <string name="status">Status</string>
+    <string name="license">License</string>
+    <string name="license_no">License No.</string>
+    <string name="no_license_no">No License No.</string>
+    <string name="type">Type</string>
+    <string name="brand_name">Brand Name</string>
+    <string name="description">Description</string>
+    <string name="no_description">No Description</string>
+    <string name="set_date">Set Date</string>
+    <string name="select_item">Select Item</string>
+    <string name="items">Items</string>
+
+    <!-- Actions -->
+    <string name="login">Login</string>
+    <string name="login_account">Login Account</string>
+    <string name="register">Register</string>
+    <string name="register_account">Register Account</string>
+    <string name="logout">Logout</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+    <string name="confirm">Confirm</string>
+    <string name="ok">OK</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="add_to_order">Add To Order</string>
+    <string name="print">Print</string>
+    <string name="generate">Generate</string>
+    <string name="delete">Delete</string>
+    <string name="new_str">New</string>
+    <string name="go_back">Go Back</string>
+    <string name="create">Create</string>
+    <string name="add">Add</string>
+    <string name="load">Load</string>
+
+    <string name="edit_profile">Edit Profile</string>
+    <string name="user_details">User Details</string>
+
+    <!-- warehouse related -->
+    <string name="stocks">Stocks</string>
+
+    <string name="warehouse">Warehouse</string>
+    <string name="add_warehouse">Add Warehouse</string>
+    <string name="edit_warehouse">Edit Warehouse</string>
+    <string name="warehouse_details">Warehouse Details</string>
+    <string name="no_warehouses">No Warehouses</string>
+    <string name="warehouse_name">Warehouse Name</string>
+    <string name="add_stock">Add Stock</string>
+    <string name="add_warehouse_stock">Add Warehouse Stock</string>
+    <string name="no_stocks">No Stocks</string>
+    <string name="total_stocks">Total Stocks</string>
+    <string name="in_stock">In Stock:</string>
+    <string name="date_acquired">Date Acquired</string>
+    <string name="stock_details">Stock Details</string>
+    <string name="critical_level">Critical Level</string>
+    <string name="delete_warehouse">Delete Warehouse</string>
+    <string name="remaining_stocks">Remaining Stocks:</string>
+
+    <!-- employee related -->
+    <string name="employee">Employee</string>
+    <string name="add_employee">Add Employee</string>
+    <string name="edit_employee">Edit Employee</string>
+    <string name="employee_details">Employee Details</string>
+    <string name="employee_name">Name of Employee</string>
+    <string name="designation_position">Designation/Position</string>
+    <string name="employee_status">Permanent/Contractual etc.</string>
+    <string name="no_employees">No Employees</string>
+
+    <!-- vehicle related -->
+    <string name="vehicle">Vehicle</string>
+    <string name="no_vehicle">No Vehicle</string>
+    <string name="add_vehicle">Add Vehicle</string>
+    <string name="edit_vehicle">Edit Vehicle</string>
+    <string name="vehicle_details">Vehicle Details</string>
+    <string name="vehicle_model">Vehicle Model</string>
+    <string name="plate_no">Plate No.</string>
+    <string name="no_plate_no">No Plate No.</string>
+    <string name="no_vehicles">No Vehicles</string>
+
+    <!-- brand related -->
+    <string name="add_brand">Add Brand</string>
+    <string name="edit_brand">Edit Brand</string>
+    <string name="no_brands">No Brands</string>
+
+    <!-- category related -->
+    <string name="add_category">Add Category</string>
+    <string name="edit_category">Edit Category</string>
+    <string name="no_categories">No Categories</string>
+
+    <!-- product related -->
+    <string name="add_product">Add Product</string>
+    <string name="edit_product">Edit Product</string>
+    <string name="product_details">Product Details</string>
+    <string name="product_name">Product Name</string>
+    <string name="product_price">Product Price</string>
+    <string name="no_products">No Products</string>
+
+    <!-- supplier related -->
+    <string name="add_supplier">Add Supplier</string>
+    <string name="edit_supplier">Edit Supplier</string>
+    <string name="supplier_name">Supplier Name</string>
+    <string name="supplier_details">Supplier Details</string>
+    <string name="no_suppliers">No Suppliers</string>
+
+    <!-- consumer related -->
+    <string name="add_consumer">Add Consumer</string>
+    <string name="edit_consumer">Edit Consumer</string>
+    <string name="consumer_name">Consumer Name</string>
+    <string name="consumer_details">Consumer Details</string>
+    <string name="no_consumers">No Consumers</string>
+
+    <!-- delivery related -->
+    <string name="tracking_no">Tracking No.</string>
+    <string name="add_delivery">Add Delivery</string>
+    <string name="edit_delivery">Edit Delivery</string>
+    <string name="add_delivery_item">Add Delivery Item</string>
+    <string name="edit_delivery_item">Edit Delivery Item</string>
+    <string name="no_deliveries">No Deliveries</string>
+    <string name="delivery_details">Delivery Details</string>
+    <string name="delivery_item_details">Delivery Item Details</string>
+    <string name="vehicle_load">Vehicle Load</string>
+    <string name="load_to_vehicle">Load to Vehicle</string>
+    <string name="checkout">Checkout</string>
+    <string name="complete_delivery">Complete Delivery</string>
+    <string name="delivered">Delivered</string>
+
+    <!-- order related -->
+    <string name="order_details">Order Details</string>
+    <string name="add_order">Add Order</string>
+    <string name="scan_order">Scan Order</string>
+    <string name="or_no">OR No.</string>
+    <string name="no_orders">No Orders</string>
+    <string name="date_ordered">Date Ordered</string>
+
+    <!-- figures/numbers -->
+    <string name="zero">0</string>
+    <string name="zero_amount">Php 0.00</string>
+    <string name="one">1</string>
+    <string name="date_sample">Feb 01, 2025</string>
+    <string name="x">x</string>
+    <string name="php">PHP</string>
+
+    <!-- -->
+    <string name="welcome">Welcome</string>
+    <string name="goodbye">Goodbye</string>
+    <string name="hello">Hello</string>
+    <string name="search">Search</string>
+    <string name="required">Required</string>
+
+    <string name="dashboard">Dashboard</string>
+    <string name="home">Home</string>
+    <string name="profile">Profile</string>
+    <string name="vehicles">Vehicles</string>
+    <string name="trucks">Trucks</string>
+    <string name="employees">Employees</string>
+    <string name="supplier">Supplier</string>
+    <string name="suppliers">Suppliers</string>
+    <string name="consumer">Consumer</string>
+    <string name="consumers">Consumers</string>
+    <string name="brand">Brand</string>
+    <string name="brands">Brands</string>
+    <string name="category">Category</string>
+    <string name="categories">Categories</string>
+    <string name="product">Product</string>
+    <string name="products">Products</string>
+    <string name="warehouses">Warehouses</string>
+    <string name="orders">Orders</string>
+    <string name="delivery">Delivery</string>
+    <string name="deliveries">Deliveries</string>
+    <string name="quantity">Quantity</string>
+    <string name="amount">Amount</string>
+    <string name="total_amount">Total Amount</string>
+    <string name="subtotal">Subtotal</string>
+    <string name="price">Price</string>
+    <string name="selling_price">Selling Price</string>
+    <string name="receipt">Receipt</string>
+
+    <!-- Notes -->
+    <string name="note_quantity">Note: Quantity is set to 1 if no number is entered.</string>
+    <string name="note_delivery">Important: Once checked out, you can\'t add more items.</string>
+    <string name="note_delivery_add">Important: Please complete \"Processing\" deliveries first before adding new delivery entry.</string>
+
+</resources>
