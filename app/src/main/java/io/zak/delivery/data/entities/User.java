@@ -19,4 +19,5 @@ public class User {
     public String address;
     public String contactNo;
     public String email;
+    public int fkVehicleId; // assigned vehicle
 }
