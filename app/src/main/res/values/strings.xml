@@ -159,6 +159,7 @@
     <!-- stock related -->
     <string name="stocks">Stocks</string>
     <string name="scan_stock">Scan Stock</string>
+    <string name="total_ordered">Total Ordered</string>
 
     <!-- order related -->
     <string name="order_details">Order Details</string>
