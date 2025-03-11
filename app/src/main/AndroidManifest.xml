@@ -25,6 +25,9 @@
         <activity android:name=".LoginActivity" />
         <activity android:name=".RegisterActivity" />
         <activity android:name=".HomeActivity" />
+
+        <!-- Product-related activities -->
+        <activity android:name=".ProductsActivity" android:parentActivityName=".HomeActivity" />
     </application>
 
 </manifest>
