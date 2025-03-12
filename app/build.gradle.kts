@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.firebase.auth)
 //    implementation(libs.credentials)
 //    implementation(libs.credentials.playservices.auth)
+//    implementation(libs.googleId)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

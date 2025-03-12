@@ -7,7 +7,9 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -15,7 +17,12 @@ import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.Firebase;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,12 +54,17 @@ public class ProductsActivity extends AppCompatActivity implements ProductListAd
     private CompositeDisposable disposables;
     private AlertDialog.Builder dialogBuilder;
 
+    private FirebaseAuth mAuth;
+    private FirebaseUser mUser;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_products);
         getWidgets();
         setListeners();
+
+        mAuth = FirebaseAuth.getInstance(); // initialize FirebaseAuth
     }
 
     private void getWidgets() {
@@ -95,6 +107,18 @@ public class ProductsActivity extends AppCompatActivity implements ProductListAd
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        // check if user is signed-in
+        mUser = mAuth.getCurrentUser();
+        if (mUser != null) {
+            // TODO update UI, show user is signed-in
+        } else {
+            // TODO update UI, show user is NOT signed-in
+        }
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         if (disposables == null) disposables = new CompositeDisposable();
@@ -126,6 +150,36 @@ public class ProductsActivity extends AppCompatActivity implements ProductListAd
     @Override
     public void onItemClick(int position) {
         // TODO view product
+    }
+
+    // TODO
+    private void register(String email, String password) {
+        mAuth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "Registration Success");
+                        mUser = mAuth.getCurrentUser();
+                        // TODO display info
+                    } else {
+                        Log.w(TAG, "Registration Failure", task.getException());
+                        Toast.makeText(this, "Authentication Failed", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    // TODO
+    private void signIn(String email, String password) {
+        mAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "Sign In Success");
+                        mUser = mAuth.getCurrentUser();
+                        // TODO display info
+                    } else {
+                        Log.w(TAG, "Sign In Failure", task.getException());
+                        Toast.makeText(this, "Authentication Failed", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private void onSearch(String query) {
