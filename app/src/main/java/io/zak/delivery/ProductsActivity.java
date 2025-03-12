@@ -106,6 +106,7 @@ public class ProductsActivity extends AppCompatActivity implements ProductListAd
             Log.d(TAG, "Returned with list size=" + list.size());
             adapter.replaceAll(list);
             productList = list;
+            tvNoProducts.setVisibility(list.isEmpty() ? View.VISIBLE : View.GONE);
         }, err -> {
             progressGroup.setVisibility(View.GONE);
             Log.e(TAG, "Database error: " + err);
