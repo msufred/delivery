@@ -31,6 +31,12 @@
 
         <!-- VehicleStock related activities -->
         <activity android:name=".StocksActivity" android:parentActivityName=".HomeActivity" />
+
+        <!-- Consumer-related activities -->
+        <activity android:name=".ConsumersActivity" android:parentActivityName=".HomeActivity" />
+
+        <!-- Order-related activities -->
+        <activity android:name=".OrdersActivity" android:parentActivityName=".HomeActivity" />
     </application>
 
 </manifest>
