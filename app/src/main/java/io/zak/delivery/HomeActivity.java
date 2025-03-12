@@ -80,7 +80,7 @@ public class HomeActivity extends AppCompatActivity {
         });
 
          cardOrders.setOnClickListener(v -> {
-             // TODO
+             startActivity(new Intent(this, OrdersActivity.class));
          });
 
          cardProducts.setOnClickListener(v -> {
@@ -88,7 +88,7 @@ public class HomeActivity extends AppCompatActivity {
          });
 
          cardConsumers.setOnClickListener(v -> {
-             // TODO
+             startActivity(new Intent(this, ConsumersActivity.class));
          });
     }
 
