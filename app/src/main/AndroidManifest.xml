@@ -28,6 +28,9 @@
 
         <!-- Product-related activities -->
         <activity android:name=".ProductsActivity" android:parentActivityName=".HomeActivity" />
+
+        <!-- VehicleStock related activities -->
+        <activity android:name=".StocksActivity" android:parentActivityName=".HomeActivity" />
     </application>
 
 </manifest>
