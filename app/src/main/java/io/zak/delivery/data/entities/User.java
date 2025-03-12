@@ -1,5 +1,6 @@
 package io.zak.delivery.data.entities;
 
+import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
@@ -19,5 +20,6 @@ public class User {
     public String address;
     public String contactNo;
     public String email;
+    @ColumnInfo(defaultValue = "-1")
     public int fkVehicleId; // assigned vehicle
 }
