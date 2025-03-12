@@ -11,11 +11,7 @@ public class Order {
     public String orNo;             // official receipt no; REQUIRED
     public int fkVehicleId;         // from assigned vehicle
     public int fkEmployeeId;        // by assigned employee/driver
-
-    public String consumerName;
-    public String consumerAddress;
-    public String consumerContact;
-
+    public int fkConsumerId;
     public long dateOrdered;        // Date converted to long value (use getTime() of Date)
     public double totalAmount;      // total amount of the order
     public String orderStatus;      // i.e. Processing, Completed
