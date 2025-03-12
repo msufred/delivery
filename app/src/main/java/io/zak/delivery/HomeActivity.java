@@ -35,6 +35,8 @@ public class HomeActivity extends AppCompatActivity {
     private CompositeDisposable disposables;
     private AlertDialog.Builder dialogBuilder;
 
+    private User mUser;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,7 +66,17 @@ public class HomeActivity extends AppCompatActivity {
         });
 
         cardStocks.setOnClickListener(v -> {
-            // TODO
+            // pass vehicle id
+            if (mUser.fkVehicleId != -1) {
+                Intent intent = new Intent(this, StocksActivity.class);
+                intent.putExtra("vehicle_id", mUser.fkVehicleId);
+                startActivity(intent);
+            } else {
+                dialogBuilder.setTitle("Invalid")
+                        .setMessage("Vehicle ID not set.")
+                        .setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
+                dialogBuilder.create().show();
+            }
         });
 
          cardOrders.setOnClickListener(v -> {
@@ -99,8 +111,9 @@ public class HomeActivity extends AppCompatActivity {
         }).observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io()).subscribe(users -> {
             Log.d(TAG, "Returned with list size=" + users.size());
             progressGroup.setVisibility(View.GONE);
-            if (users.get(0) != null) {
-                displayInfo(users.get(0));
+            mUser = users.get(0);
+            if (mUser != null) {
+                displayInfo(mUser);
             }
         }, err -> {
             Log.e(TAG, "Database error: " + err);
