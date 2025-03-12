@@ -9,6 +9,7 @@ import androidx.room.Update;
 import java.util.List;
 
 import io.zak.delivery.data.entities.VehicleStock;
+import io.zak.delivery.data.relations.VehicleStockDetail;
 
 @Dao
 public interface VehicleStockDao {
@@ -22,6 +23,10 @@ public interface VehicleStockDao {
     @Delete
     int delete(VehicleStock vehicleStock);
 
-    @Query("SELECT * FROM vehicle_stocks WHERE fkVehicleId=:vehicleId")
-    List<VehicleStock> getVehicleStocks(int vehicleId);
+    @Query("SELECT vehicle_stocks.*, products.* " +
+            "FROM vehicle_stocks " +
+            "INNER JOIN products " +
+            "ON vehicle_stocks.fkProductId = products.productId " +
+            "WHERE vehicle_stocks.fkVehicleId=:vehicleId")
+    List<VehicleStockDetail> getVehicleStocks(int vehicleId);
 }
