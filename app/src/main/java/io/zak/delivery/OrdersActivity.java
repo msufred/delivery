@@ -140,7 +140,7 @@ public class OrdersActivity extends AppCompatActivity implements OrderListAdapte
                 oList.add(detail);
             }
         }
-        return list;
+        return oList;
     }
 
     private void goBack() {

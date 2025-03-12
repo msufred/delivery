@@ -29,7 +29,7 @@ public class HomeActivity extends AppCompatActivity {
     private ImageView profile;
     private TextView tvUsername, tvPosition, tvLicense;
     private ImageButton btnEdit;
-    private CardView cardStocks, cardOrders, cardProducts, cardConsumers;
+    private CardView cardStocks, cardOrders, cardProducts, cardConsumers, cardBrands, cardCategories;
     private RelativeLayout progressGroup;
 
     private CompositeDisposable disposables;
@@ -55,6 +55,8 @@ public class HomeActivity extends AppCompatActivity {
         cardOrders = findViewById(R.id.card_orders);
         cardProducts = findViewById(R.id.card_products);
         cardConsumers = findViewById(R.id.card_consumers);
+        cardBrands = findViewById(R.id.card_brands);
+        cardCategories = findViewById(R.id.card_categories);
         progressGroup = findViewById(R.id.progress_group);
 
         dialogBuilder = new AlertDialog.Builder(this);
@@ -89,6 +91,14 @@ public class HomeActivity extends AppCompatActivity {
 
          cardConsumers.setOnClickListener(v -> {
              startActivity(new Intent(this, ConsumersActivity.class));
+         });
+
+         cardBrands.setOnClickListener(v -> {
+             // TODO
+         });
+
+         cardCategories.setOnClickListener(v -> {
+             // TODO
          });
     }
 

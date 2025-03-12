@@ -10,7 +10,7 @@ import androidx.room.PrimaryKey;
  */
 @Entity(tableName = "products")
 public class Product {
-    @PrimaryKey(autoGenerate = true)
+    @PrimaryKey
     public int productId;
     public String productName;
     public int fkBrandId;       // no constraint

@@ -15,6 +15,8 @@ import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.Firebase;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -118,7 +120,7 @@ public class ProductsActivity extends AppCompatActivity implements ProductListAd
     }
 
     private void syncOnline() {
-        // TODO sync online database
+        Firebase firebase = Firebase.INSTANCE;
     }
 
     @Override

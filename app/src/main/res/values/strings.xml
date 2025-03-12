@@ -126,8 +126,10 @@
     <string name="product_name">Product Name</string>
     <string name="product_price">Product Price</string>
     <string name="no_products">No Products</string>
+    <string name="product_id">Product ID</string>
 
     <!-- supplier related -->
+    <string name="supplier_id">Supplier ID</string>
     <string name="add_supplier">Add Supplier</string>
     <string name="edit_supplier">Edit Supplier</string>
     <string name="supplier_name">Supplier Name</string>
