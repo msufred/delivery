@@ -51,7 +51,7 @@ public class EditProfileActivity extends AppCompatActivity {
         etName = findViewById(R.id.et_name);
         etPosition = findViewById(R.id.et_position);
         etAddress = findViewById(R.id.et_address);
-        etEmail = findViewById(R.id.et_email);
+
         etContact = findViewById(R.id.et_contact);
         btnBack = findViewById(R.id.btn_back);
         btnCancel = findViewById(R.id.btn_cancel);
@@ -106,7 +106,6 @@ public class EditProfileActivity extends AppCompatActivity {
             etName.setText(user.fullName);
             etPosition.setText(user.position);
             etAddress.setText(user.address);
-            etEmail.setText(user.email);
             etContact.setText(user.contactNo);
         }
     }
@@ -136,10 +135,7 @@ public class EditProfileActivity extends AppCompatActivity {
             etAddress.setError("Required");
             isValid = false;
         }
-        if (etEmail.getText().toString().isBlank()) {
-            etEmail.setError("Required");
-            isValid = false;
-        }
+
 
         return isValid;
     }
@@ -148,7 +144,6 @@ public class EditProfileActivity extends AppCompatActivity {
         mUserEntry.fullName = Utils.normalize(etName.getText().toString());
         mUserEntry.position = Utils.normalize(etPosition.getText().toString());
         mUserEntry.address = Utils.normalize(etAddress.getText().toString());
-        mUserEntry.email = Utils.normalize(etEmail.getText().toString());
         mUserEntry.contactNo = Utils.normalize(etContact.getText().toString());
 
         progressGroup.setVisibility(View.VISIBLE);

@@ -133,23 +133,7 @@
                     android:textSize="@dimen/text_input"
                     android:layout_marginTop="8dp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/email_address"
-                    android:textStyle="bold"
-                    android:layout_marginTop="16dp"/>
 
-                <EditText
-                    android:id="@+id/et_email"
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/text_input_target"
-                    android:background="@drawable/bg_textfield_grey"
-                    android:autofillHints="postalAddress"
-                    android:hint="@string/email_address"
-                    android:inputType="textEmailAddress"
-                    android:textSize="@dimen/text_input"
-                    android:layout_marginTop="8dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
