@@ -19,10 +19,18 @@ public interface ConsumerDao {
     @Update
     int update(Consumer consumer);
 
+    @Update
+    void updateAll(Consumer...consumers);
+
     @Delete
     int delete(Consumer consumer);
 
     @Query("SELECT * FROM consumers")
     List<Consumer> getAll();
 
+    @Query("SELECT * FROM consumers WHERE consumerId=:id")
+    List<Consumer> getConsumer(int id);
+
+    @Query("SELECT COUNT(*) FROM consumers")
+    int getSize();
 }

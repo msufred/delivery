@@ -26,18 +26,27 @@
         <activity android:name=".RegisterActivity" />
         <activity android:name=".HomeActivity" />
 
+        <!-- Profile-related activities -->
+        <activity android:name=".ViewProfileActivity" android:parentActivityName=".HomeActivity"/>
+        <activity android:name=".EditProfileActivity" android:parentActivityName=".EditProfileActivity"/>
+
+
         <activity android:name=".BrandsActivity" android:parentActivityName=".HomeActivity" />
         <activity android:name=".CategoriesActivity" android:parentActivityName=".HomeActivity" />
 
         <!-- Product-related activities -->
         <activity android:name=".ProductsActivity" android:parentActivityName=".HomeActivity" />
+        <activity android:name=".ViewProductActivity" android:parentActivityName=".ProductsActivity"/>
+
 
         <!-- VehicleStock related activities -->
         <activity android:name=".StocksActivity" android:parentActivityName=".HomeActivity" />
 
         <!-- Consumer-related activities -->
         <activity android:name=".ConsumersActivity" android:parentActivityName=".HomeActivity" />
-
+        <activity android:name=".ViewConsumerActivity" android:parentActivityName=".ConsumersActivity"/>
+        <activity android:name=".AddConsumerActivity" android:parentActivityName=".ConsumersActivity"/>
+        <activity android:name=".EditConsumerActivity" android:parentActivityName=".ViewConsumerActivity"/>
         <!-- Order-related activities -->
         <activity android:name=".OrdersActivity" android:parentActivityName=".HomeActivity" />
     </application>
