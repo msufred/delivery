@@ -14,4 +14,11 @@ public class AppDatabaseImpl {
         }
         return database;
     }
+
+    public static AppDatabase getDatabase(Context context) {
+        if (database == null) {
+            database = Room.databaseBuilder(context, AppDatabase.class, "zakinventorydb").build();
+        }
+        return database;
+    }
 }

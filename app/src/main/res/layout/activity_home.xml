@@ -59,10 +59,10 @@
             </LinearLayout>
 
             <ImageButton
-                android:id="@+id/btn_edit"
+                android:id="@+id/btn_view"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:src="@drawable/ic_edit_2"
+                android:src="@drawable/ic_eye"
                 android:background="@drawable/bg_ripple_round"
                 app:tint="@color/white"
                 android:contentDescription="@string/button"/>

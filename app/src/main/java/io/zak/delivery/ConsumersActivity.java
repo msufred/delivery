@@ -1,21 +1,22 @@
 package io.zak.delivery;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -28,21 +29,26 @@ import io.zak.delivery.data.entities.Consumer;
 
 public class ConsumersActivity extends AppCompatActivity implements ConsumerListAdapter.OnItemClickListener {
 
-    private static final String TAG = "Consumer";
+    private static final String TAG = "Consumers";
 
-    // widgets
-    private ImageButton btnBack;
+    // Widgets
     private SearchView searchView;
     private RecyclerView recyclerView;
     private TextView tvNoConsumers;
+    private ImageView btnBack;
     private Button btnAdd;
-    private RelativeLayout progressLayout;
+    private RelativeLayout progressGroup;
 
+    // RecyclerView adapter
     private ConsumerListAdapter adapter;
+
+    // list reference for search filter
     private List<Consumer> consumerList;
 
+    // Comparator used for search filter; passed to SupplierListAdapter
+    private final Comparator<Consumer> comparator = Comparator.comparing(consumer ->consumer.consumerName);
+
     private CompositeDisposable disposables;
-    private AlertDialog.Builder dialogBuilder;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -53,22 +59,19 @@ public class ConsumersActivity extends AppCompatActivity implements ConsumerList
     }
 
     private void getWidgets() {
-        btnBack = findViewById(R.id.btn_back);
         searchView = findViewById(R.id.search_view);
         recyclerView = findViewById(R.id.recycler_view);
         tvNoConsumers = findViewById(R.id.tv_no_consumers);
+        btnBack = findViewById(R.id.btn_back);
         btnAdd = findViewById(R.id.btn_add);
-        progressLayout = findViewById(R.id.progress_group);
+        progressGroup = findViewById(R.id.progress_group);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new ConsumerListAdapter(this);
+        adapter = new ConsumerListAdapter(comparator, this);
         recyclerView.setAdapter(adapter);
-
-        dialogBuilder = new AlertDialog.Builder(this);
     }
 
     private void setListeners() {
-        btnBack.setOnClickListener(v -> goBack());
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -81,8 +84,14 @@ public class ConsumersActivity extends AppCompatActivity implements ConsumerList
                 return false;
             }
         });
+
+        btnBack.setOnClickListener(v -> {
+            getOnBackPressedDispatcher().onBackPressed();
+            finish();
+        });
+
         btnAdd.setOnClickListener(v -> {
-            // TODO
+            startActivity(new Intent(this, AddConsumerActivity.class));
         });
     }
 
@@ -91,32 +100,33 @@ public class ConsumersActivity extends AppCompatActivity implements ConsumerList
         super.onResume();
         if (disposables == null) disposables = new CompositeDisposable();
 
-        progressLayout.setVisibility(View.VISIBLE);
+        progressGroup.setVisibility(View.VISIBLE);
         disposables.add(Single.fromCallable(() -> {
-            Log.d(TAG, "Retrieving consumer entries");
-            return AppDatabaseImpl.getInstance(getApplicationContext()).consumers().getAll();
+            Log.d(TAG, "Fetching Consumer entries: " + Thread.currentThread());
+            return AppDatabaseImpl.getDatabase(getApplicationContext()).consumers().getAll();
         }).observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io()).subscribe(list -> {
-            Log.d(TAG, "Returned with list size=" + list.size());
-            progressLayout.setVisibility(View.GONE);
+            Log.d(TAG, "Fetched " + list.size() + " items: " + Thread.currentThread());
+            progressGroup.setVisibility(View.GONE);
             consumerList = list;
             adapter.replaceAll(list);
-            tvNoConsumers.setVisibility(list.isEmpty() ? View.VISIBLE : View.GONE);
+            tvNoConsumers.setVisibility(list.isEmpty() ? View.VISIBLE : View.INVISIBLE);
         }, err -> {
-            Log.e(TAG, "Database error: " + err);
-            progressLayout.setVisibility(View.GONE);
-            dialogBuilder.setTitle("Database Error")
-                    .setMessage("Error while retrieving consumer entries: " + err)
-                    .setPositiveButton("Dismiss", (dialog, which) -> {
-                        dialog.dismiss();
-                        goBack();
-                    });
-            dialogBuilder.create().show();
+            Log.e(TAG, "Database Error: " + err);
+            progressGroup.setVisibility(View.GONE);
         }));
     }
 
     @Override
     public void onItemClick(int position) {
-        // TODO
+        if (adapter != null) {
+            Consumer consumer = adapter.getItem(position);
+            if (consumer != null) {
+                Log.d(TAG, "Consumer selected: " + consumer.consumerName);
+                Intent intent = new Intent(this, ViewConsumerActivity.class);
+                intent.putExtra("consumer_id", consumer.consumerId);
+                startActivity(intent);
+            }
+        }
     }
 
     private void onSearch(String query) {
@@ -125,26 +135,21 @@ public class ConsumersActivity extends AppCompatActivity implements ConsumerList
         recyclerView.scrollToPosition(0);
     }
 
-    private List<Consumer> filter(List<Consumer> list, String query) {
-        List<Consumer> cList = new ArrayList<>();
+    private List<Consumer> filter(List<Consumer> consumers, String query) {
         String str = query.toLowerCase();
-        for (Consumer consumer : list) {
+        List<Consumer> list = new ArrayList<>();
+        for (Consumer consumer : consumers) {
             if (consumer.consumerName.toLowerCase().contains(str)) {
-                cList.add(consumer);
+                list.add(consumer);
             }
         }
-        return cList;
-    }
-
-    private void goBack() {
-        getOnBackPressedDispatcher().onBackPressed();
-        finish();
+        return list;
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "Destroying resources");
+        Log.d(TAG, "Destroying resources.");
         disposables.dispose();
     }
 }

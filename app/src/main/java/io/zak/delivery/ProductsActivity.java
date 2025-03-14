@@ -230,9 +230,17 @@ public class ProductsActivity extends AppCompatActivity implements ProductListAd
 
     @Override
     public void onItemClick(int position) {
-        // TODO view product
+        if (adapter != null) {
+            Product product = adapter.getItem(position);
+            if (product != null) {
+                Log.d(TAG, "Product selected: " + product.productName);
+                // TODO
+                Intent intent = new Intent(this, ViewProductActivity.class);
+                intent.putExtra("product_id", product.productId);
+                startActivity(intent);
+            }
+        }
     }
-
 
     private void onSearch(String query) {
         List<Product> filteredList = filter(productList, query);

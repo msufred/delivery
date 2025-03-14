@@ -47,7 +47,7 @@ public class HomeActivity extends AppCompatActivity {
     // widgets
     private ImageView profile;
     private TextView tvUsername, tvPosition, tvLicense;
-    private ImageButton btnEdit;
+    private ImageButton btnView;
     private CardView cardStocks, cardOrders, cardProducts, cardConsumers, cardBrands, cardCategories;
     private RelativeLayout progressGroup;
 
@@ -96,7 +96,7 @@ public class HomeActivity extends AppCompatActivity {
         tvUsername = findViewById(R.id.tv_username);
         tvPosition = findViewById(R.id.tv_position);
         tvLicense = findViewById(R.id.tv_license);
-        btnEdit = findViewById(R.id.btn_edit);
+        btnView = findViewById(R.id.btn_view);
         cardStocks = findViewById(R.id.card_stocks);
         cardOrders = findViewById(R.id.card_orders);
         cardProducts = findViewById(R.id.card_products);
@@ -109,8 +109,9 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void setListeners() {
-        btnEdit.setOnClickListener(v -> {
+        btnView.setOnClickListener(v -> {
             // TODO
+            startActivity(new Intent(this, ViewProfileActivity.class));
         });
 
         cardStocks.setOnClickListener(v -> {
