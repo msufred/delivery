@@ -8,18 +8,37 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.zak.delivery.data.AppDatabaseImpl;
+import io.zak.delivery.data.entities.Brand;
+import io.zak.delivery.data.entities.Category;
+import io.zak.delivery.data.entities.Product;
+import io.zak.delivery.data.entities.Supplier;
 import io.zak.delivery.data.entities.User;
+import io.zak.delivery.firebase.BrandEntry;
+import io.zak.delivery.firebase.UserEntry;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -37,12 +56,51 @@ public class HomeActivity extends AppCompatActivity {
 
     private User mUser;
 
+    private FirebaseAuth mAuth;
+    private DatabaseReference mDatabase;
+    private UserEntry mUserEntry;
+
+    // data to sync
+    private List<Brand> brandList;
+    private List<Category> categoryList;
+    private List<Product> productList;
+    private List<Supplier> supplierList;
+
+    // refs
+    private DatabaseReference brandRef;
+
+    // value listeners
+    private final ValueEventListener brandEventListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(@NonNull DataSnapshot snapshot) {
+            Log.d(TAG, "fetching brands...");
+            brandList = new ArrayList<>();
+            for (DataSnapshot postSnapshot : snapshot.getChildren()) {
+                BrandEntry entry = postSnapshot.getValue(BrandEntry.class);
+                if (entry != null) {
+                    Brand brand = new Brand();
+                    brand.brandId = entry.id;
+                    brand.brandName = entry.brand;
+                    brandList.add(brand);
+                }
+            }
+            brandRef.removeEventListener(brandEventListener);
+            Log.d(TAG, "done fetching brands!");
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError error) {
+            Log.w(TAG, "cancelled brands sync", error.toException());
+        }
+    };
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
         getWidgets();
         setListeners();
+        mAuth = FirebaseAuth.getInstance();
     }
 
     private void getWidgets() {
@@ -69,16 +127,16 @@ public class HomeActivity extends AppCompatActivity {
 
         cardStocks.setOnClickListener(v -> {
             // pass vehicle id
-            if (mUser.fkVehicleId != -1) {
-                Intent intent = new Intent(this, StocksActivity.class);
-                intent.putExtra("vehicle_id", mUser.fkVehicleId);
-                startActivity(intent);
-            } else {
-                dialogBuilder.setTitle("Invalid")
-                        .setMessage("Vehicle ID not set.")
-                        .setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
-                dialogBuilder.create().show();
-            }
+//            if (mUser.fkVehicleId != -1) {
+//                Intent intent = new Intent(this, StocksActivity.class);
+//                intent.putExtra("vehicle_id", mUser.fkVehicleId);
+//                startActivity(intent);
+//            } else {
+//                dialogBuilder.setTitle("Invalid")
+//                        .setMessage("Vehicle ID not set.")
+//                        .setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
+//                dialogBuilder.create().show();
+//            }
         });
 
          cardOrders.setOnClickListener(v -> {
@@ -94,56 +152,55 @@ public class HomeActivity extends AppCompatActivity {
          });
 
          cardBrands.setOnClickListener(v -> {
-             // TODO
+             startActivity(new Intent(this, BrandsActivity.class));
          });
 
          cardCategories.setOnClickListener(v -> {
-             // TODO
+             startActivity(new Intent(this, CategoriesActivity.class));
          });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (disposables == null) disposables = new CompositeDisposable();
+        if (mDatabase == null) mDatabase = FirebaseDatabase.getInstance().getReference();
 
-        int id = Utils.getLoginId(this);
-        if (id == -1) {
-            startActivity(new Intent(this, MainActivity.class));
+        FirebaseUser user = mAuth.getCurrentUser();
+
+        if (user == null) {
+            startActivity(new Intent(this, LoginActivity.class));
             finish();
             return;
         }
 
         progressGroup.setVisibility(View.VISIBLE);
-        disposables.add(Single.fromCallable(() -> {
-            Log.d(TAG, "Retrieving user info");
-            return AppDatabaseImpl.getInstance(getApplicationContext()).users().getUserById(id);
-        }).observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io()).subscribe(users -> {
-            Log.d(TAG, "Returned with list size=" + users.size());
-            progressGroup.setVisibility(View.GONE);
-            mUser = users.get(0);
-            if (mUser != null) {
-                displayInfo(mUser);
-            }
-        }, err -> {
-            Log.e(TAG, "Database error: " + err);
-            dialogBuilder.setTitle("Database Error")
-                    .setMessage("Error while retrieving user info: " + err)
-                    .setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
-            dialogBuilder.create().show();
-        }));
+        mDatabase.child("users").child(user.getUid())
+                .get()
+                .addOnCompleteListener(this, task -> {
+                    progressGroup.setVisibility(View.GONE);
+                    if (task.isSuccessful()) {
+                        mUserEntry = task.getResult().getValue(UserEntry.class);
+                        displayInfo(mUserEntry);
+                        syncData();
+                    } else {
+                        Toast.makeText(this, "Failed to fetch User info.", Toast.LENGTH_SHORT).show();
+                        Log.w(TAG, "failed to fetch user info", task.getException());
+                    }
+                });
     }
 
-    private void displayInfo(User user) {
-        tvUsername.setText(user.username);
-        if (user.position != null) tvPosition.setText(user.position);
-        if (user.license != null) tvLicense.setText(user.license);
+    private void displayInfo(UserEntry entry) {
+        if (entry != null) {
+            tvUsername.setText(entry.fullName);
+            if (entry.position != null) tvPosition.setText(entry.position);
+            if (entry.license != null) tvLicense.setText(entry.license);
+        }
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "Destroying resources");
-        disposables.dispose();
+    private void syncData() {
+//        if (brandRef == null) {
+//            brandRef = FirebaseDatabase.getInstance().getReference("brands");
+//            brandRef.addValueEventListener(brandEventListener);
+//        }
     }
 }

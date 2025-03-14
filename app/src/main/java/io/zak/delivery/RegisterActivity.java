@@ -13,33 +13,36 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.core.Single;
-import io.reactivex.rxjava3.disposables.CompositeDisposable;
-import io.reactivex.rxjava3.schedulers.Schedulers;
-import io.zak.delivery.data.AppDatabaseImpl;
-import io.zak.delivery.data.entities.User;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import io.zak.delivery.firebase.UserEntry;
 
 public class RegisterActivity extends AppCompatActivity {
 
     private static final String TAG = "Register";
 
-    private EditText etUsername, etPassword, etConfirmPassword;
+    private EditText etEmail, etPassword, etConfirmPassword;
     private ProgressBar progressBar;
-
-    private CompositeDisposable disposables;
     private AlertDialog.Builder dialogBuilder;
+
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
-        etUsername = findViewById(R.id.et_username);
+        etEmail = findViewById(R.id.et_email);
         etPassword = findViewById(R.id.et_password);
         etConfirmPassword = findViewById(R.id.et_password_confirm);
         Button btnRegister = findViewById(R.id.btn_register);
         Button btnLogin = findViewById(R.id.btn_login);
         progressBar = findViewById(R.id.progress_circular);
+        progressBar.setVisibility(View.INVISIBLE);
+
+        mAuth = FirebaseAuth.getInstance();
 
         // listeners
         btnRegister.setOnClickListener(v -> {
@@ -52,28 +55,30 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        if (disposables == null) disposables = new CompositeDisposable();
-        progressBar.setVisibility(View.INVISIBLE);
+    protected void onStart() {
+        super.onStart();
+        if (mAuth.getCurrentUser() != null) {
+            startActivity(new Intent(this, HomeActivity.class));
+            finish();
+        }
     }
 
     private boolean validated() {
         boolean isValid = true;
-        if (etUsername.getText().toString().isBlank()) {
-            etUsername.setError("Required");
+        if (etEmail.getText().toString().isBlank()) {
+            etEmail.setError("Required");
             isValid = false;
         }
 
         String password = etPassword.getText().toString();
-        String repassword = etConfirmPassword.getText().toString();
+        String passwordConfirm = etConfirmPassword.getText().toString();
 
         if (password.isBlank()) {
             etPassword.setError("Required");
             isValid = false;
         }
 
-        if (repassword.isBlank() || !repassword.equals(password)) {
+        if (passwordConfirm.isBlank() || !passwordConfirm.equals(password)) {
             etConfirmPassword.setError("Required or Don't Match");
             isValid = false;
         }
@@ -81,41 +86,54 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void register() {
-        String username = Utils.normalize(etUsername.getText().toString());
+        String email = Utils.normalize(etEmail.getText().toString());
         String password = Utils.normalize(etPassword.getText().toString());
 
-        User user = new User();
-        user.username = username;
-        user.password = password;
-
         progressBar.setVisibility(View.VISIBLE);
-        disposables.add(Single.fromCallable(() -> {
-            Log.d(TAG, "Registering user");
-            return AppDatabaseImpl.getInstance(getApplicationContext()).users().insert(user);
-        }).observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io()).subscribe(id -> {
-            progressBar.setVisibility(View.INVISIBLE);
-            Log.d(TAG, "Returned with ID=" + id.intValue());
-            if (id.intValue() != -1) {
-                Toast.makeText(this, "User registered.", Toast.LENGTH_SHORT).show();
-                Utils.saveLoginId(getApplicationContext(), id.intValue());
-                startActivity(new Intent(this, HomeActivity.class));
-                finish();
-            } else {
-                dialogBuilder.setTitle("Invalid")
-                        .setMessage("Failed to register user")
-                        .setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
-                dialogBuilder.create().show();
-            }
-        }, err -> {
-            progressBar.setVisibility(View.INVISIBLE);
-            Log.e(TAG, "Database error: " + err);
-            dialogBuilder.setTitle("Database Error")
-                    .setMessage("Error while registering user: " + err)
-                    .setPositiveButton("Dismiss", (dialog, which) -> {
-                        dialog.dismiss();
+        Log.d(TAG, "Registering user");
+        mAuth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, task -> {
+                    progressBar.setVisibility(View.INVISIBLE);
+                    if (task.isSuccessful()) {
+                        Toast.makeText(this, "User Registered", Toast.LENGTH_SHORT).show();
+                        createUserEntry(email);
+                    } else {
+                        Toast.makeText(this, "Registration Failed", Toast.LENGTH_SHORT).show();
+                        Log.w(TAG, "Registration failure", task.getException());
+                    }
+                });
+    }
+
+    private void createUserEntry(String email) {
+        FirebaseUser fUser = mAuth.getCurrentUser();
+        if (fUser != null) {
+            progressBar.setVisibility(View.VISIBLE);
+            Log.d(TAG, "creating new user entry [Firebase]");
+            UserEntry userEntry = new UserEntry();
+            userEntry.fullName = "New User";
+            userEntry.position = "Employee";
+            userEntry.email = email;
+
+            // get Firebase database reference
+            DatabaseReference database = FirebaseDatabase.getInstance().getReference();
+            database.child("users").child(fUser.getUid()).setValue(userEntry)
+                    .addOnCompleteListener(this, task -> {
+                        progressBar.setVisibility(View.INVISIBLE);
+                        if (task.isSuccessful()) {
+                            Log.d(TAG, "user created");
+                            startActivity(new Intent(this, HomeActivity.class));
+                            finish();
+                        } else {
+                            Log.w(TAG, "user creation failure", task.getException());
+                            dialogBuilder.setTitle("Database Error")
+                                    .setMessage("Error while creating user entry: " + task.getException())
+                                    .setPositiveButton("Dismiss", (dialog, which) -> {
+                                        dialog.dismiss();
+                                    });
+                            dialogBuilder.create().show();
+                        }
                     });
-            dialogBuilder.create().show();
-        }));
+        }
     }
 
     private void showLogin() {
@@ -123,10 +141,4 @@ public class RegisterActivity extends AppCompatActivity {
         finish();
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "Destroying resources.");
-        disposables.dispose();
-    }
 }

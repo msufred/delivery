@@ -12,7 +12,6 @@ public class VehicleStock {
     public int fkWarehouseStockId;  // warehouse the stock's belongs/stored
     public int quantity;            // actual remaining stocks
     public int orderedQuantity;     // ordered stocks
-    public int criticalLevel;       // minimum quantity
     public double sellingPrice;     // may differ from the product's actual price
     public double totalAmount;      // quantity * sellingPrice
     public long dateOrdered;        // date transferred from warehouse to vehicle

@@ -85,7 +85,7 @@ public class ProductsActivity extends AppCompatActivity implements ProductListAd
 
     private void setListeners() {
         btnBack.setOnClickListener(v -> goBack());
-        btnRefresh.setOnClickListener(v -> syncOnline());
+        btnRefresh.setOnClickListener(v -> syncData());
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -143,7 +143,7 @@ public class ProductsActivity extends AppCompatActivity implements ProductListAd
         }));
     }
 
-    private void syncOnline() {
+    private void syncData() {
         Firebase firebase = Firebase.INSTANCE;
     }
 

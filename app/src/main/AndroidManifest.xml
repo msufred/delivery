@@ -26,6 +26,9 @@
         <activity android:name=".RegisterActivity" />
         <activity android:name=".HomeActivity" />
 
+        <activity android:name=".BrandsActivity" android:parentActivityName=".HomeActivity" />
+        <activity android:name=".CategoriesActivity" android:parentActivityName=".HomeActivity" />
+
         <!-- Product-related activities -->
         <activity android:name=".ProductsActivity" android:parentActivityName=".HomeActivity" />
 

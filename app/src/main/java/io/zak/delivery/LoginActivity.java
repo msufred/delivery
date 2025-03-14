@@ -2,44 +2,42 @@ package io.zak.delivery;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.core.Single;
-import io.reactivex.rxjava3.disposables.CompositeDisposable;
-import io.reactivex.rxjava3.schedulers.Schedulers;
-import io.zak.delivery.data.AppDatabaseImpl;
-import io.zak.delivery.data.entities.User;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class LoginActivity extends AppCompatActivity {
 
     private static final String TAG = "Login";
 
-    private EditText etUsername, etPassword;
+    private EditText etEmail, etPassword;
     private ProgressBar progressBar;
-
-    private CompositeDisposable disposables;
     private AlertDialog.Builder dialogBuilder;
+
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        etUsername = findViewById(R.id.et_username);
+        etEmail = findViewById(R.id.et_email);
         etPassword = findViewById(R.id.et_password);
         Button btnLogin = findViewById(R.id.btn_login);
         Button btnRegister = findViewById(R.id.btn_register);
         progressBar = findViewById(R.id.progress_circular);
+        progressBar.setVisibility(View.INVISIBLE);
 
         dialogBuilder = new AlertDialog.Builder(this);
+
+        mAuth = FirebaseAuth.getInstance();
 
         // listeners
         btnLogin.setOnClickListener(v -> {
@@ -52,16 +50,18 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        if (disposables == null) disposables = new CompositeDisposable();
-        progressBar.setVisibility(View.INVISIBLE);
+    protected void onStart() {
+        super.onStart();
+        if (mAuth.getCurrentUser() != null) {
+            startActivity(new Intent(this, HomeActivity.class));
+            finish();
+        }
     }
 
     private boolean validated() {
         boolean isValid = true;
-        if (etUsername.getText().toString().isBlank()) {
-            etUsername.setError("Required");
+        if (etEmail.getText().toString().isBlank()) {
+            etEmail.setError("Required");
             isValid = false;
         }
         if (etPassword.getText().toString().isBlank()) {
@@ -72,43 +72,28 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void login() {
-        String username = Utils.normalize(etUsername.getText().toString());
+        String email = Utils.normalize(etEmail.getText().toString());
         String password= Utils.normalize(etPassword.getText().toString());
+
         progressBar.setVisibility(View.VISIBLE);
-        disposables.add(Single.fromCallable(() -> {
-            Log.d(TAG, "Log in user.");
-            return AppDatabaseImpl.getInstance(getApplicationContext()).users().getUser(username, password);
-        }).observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io()).subscribe(users -> {
-            progressBar.setVisibility(View.INVISIBLE);
-            Log.d(TAG, "Returned with list size=" + users.size());
-            User user = users.get(0);
-            if (user != null) {
-                Utils.saveLoginId(getApplicationContext(), user.id);
-                // TODO go to home
-                finish();
-            } else {
-                etUsername.setError("Invalid User");
-                etPassword.setError("Invalid Password");
-                dialogBuilder.setTitle("Invalid User")
-                                .setMessage("Invalid username and/or password. Try again.")
-                                        .setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
-                dialogBuilder.create().show();
-            }
-        }, err -> {
-            progressBar.setVisibility(View.INVISIBLE);
-            Log.e(TAG, "Database error: " + err);
-        }));
+        mAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, task -> {
+                    progressBar.setVisibility(View.INVISIBLE);
+                    if (task.isSuccessful()) {
+                        Toast.makeText(this, "User Signed In", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(this, HomeActivity.class));
+                        finish();
+                    } else {
+                        dialogBuilder.setTitle("Sign In Failure")
+                                .setMessage("Invalid Username and/or Password")
+                                .setPositiveButton("Try Again", (dialog, which) -> dialog.dismiss());
+                        dialogBuilder.create().show();
+                    }
+                });
     }
 
     private void showRegister() {
         startActivity(new Intent(this, RegisterActivity.class));
         finish();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "Destroying resources.");
-        disposables.dispose();
     }
 }
