@@ -73,19 +73,7 @@ public class HomeActivity extends AppCompatActivity {
     private final ValueEventListener brandEventListener = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot snapshot) {
-            Log.d(TAG, "fetching brands...");
-            brandList = new ArrayList<>();
-            for (DataSnapshot postSnapshot : snapshot.getChildren()) {
-                BrandEntry entry = postSnapshot.getValue(BrandEntry.class);
-                if (entry != null) {
-                    Brand brand = new Brand();
-                    brand.brandId = entry.id;
-                    brand.brandName = entry.brand;
-                    brandList.add(brand);
-                }
-            }
-            brandRef.removeEventListener(brandEventListener);
-            Log.d(TAG, "done fetching brands!");
+            replaceBrands(snapshot);
         }
 
         @Override
@@ -126,17 +114,7 @@ public class HomeActivity extends AppCompatActivity {
         });
 
         cardStocks.setOnClickListener(v -> {
-            // pass vehicle id
-//            if (mUser.fkVehicleId != -1) {
-//                Intent intent = new Intent(this, StocksActivity.class);
-//                intent.putExtra("vehicle_id", mUser.fkVehicleId);
-//                startActivity(intent);
-//            } else {
-//                dialogBuilder.setTitle("Invalid")
-//                        .setMessage("Vehicle ID not set.")
-//                        .setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
-//                dialogBuilder.create().show();
-//            }
+            startActivity(new Intent(this, StocksActivity.class));
         });
 
          cardOrders.setOnClickListener(v -> {
@@ -173,15 +151,17 @@ public class HomeActivity extends AppCompatActivity {
             return;
         }
 
+        Log.d(TAG, "getting user info from firebase");
         progressGroup.setVisibility(View.VISIBLE);
         mDatabase.child("users").child(user.getUid())
                 .get()
                 .addOnCompleteListener(this, task -> {
                     progressGroup.setVisibility(View.GONE);
                     if (task.isSuccessful()) {
+                        Log.d(TAG, "success! displaying info");
                         mUserEntry = task.getResult().getValue(UserEntry.class);
                         displayInfo(mUserEntry);
-                        syncData();
+                        // syncData();
                     } else {
                         Toast.makeText(this, "Failed to fetch User info.", Toast.LENGTH_SHORT).show();
                         Log.w(TAG, "failed to fetch user info", task.getException());
@@ -198,9 +178,23 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void syncData() {
-//        if (brandRef == null) {
-//            brandRef = FirebaseDatabase.getInstance().getReference("brands");
-//            brandRef.addValueEventListener(brandEventListener);
-//        }
+        Log.d(TAG, "syncing data");
+        progressGroup.setVisibility(View.VISIBLE);
+    }
+
+    private void replaceBrands(DataSnapshot snapshot) {
+        Log.d(TAG, "fetching brands...");
+        brandList = new ArrayList<>();
+        for (DataSnapshot postSnapshot : snapshot.getChildren()) {
+            BrandEntry entry = postSnapshot.getValue(BrandEntry.class);
+            if (entry != null) {
+                Brand brand = new Brand();
+                brand.brandId = entry.id;
+                brand.brandName = entry.brand;
+                brandList.add(brand);
+            }
+        }
+        brandRef.removeEventListener(brandEventListener);
+        Log.d(TAG, "done fetching brands!");
     }
 }

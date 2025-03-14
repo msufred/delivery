@@ -1,5 +1,6 @@
 package io.zak.delivery;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -23,6 +24,11 @@ import com.google.firebase.Firebase;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,8 +38,10 @@ import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.zak.delivery.adapters.ProductListAdapter;
+import io.zak.delivery.data.AppDatabase;
 import io.zak.delivery.data.AppDatabaseImpl;
 import io.zak.delivery.data.entities.Product;
+import io.zak.delivery.firebase.ProductEntry;
 
 public class ProductsActivity extends AppCompatActivity implements ProductListAdapter.OnItemClickListener {
 
@@ -55,7 +63,19 @@ public class ProductsActivity extends AppCompatActivity implements ProductListAd
     private AlertDialog.Builder dialogBuilder;
 
     private FirebaseAuth mAuth;
-    private FirebaseUser mUser;
+    private DatabaseReference mDatabase;
+    private DatabaseReference mProductsRef;
+    private final ValueEventListener valueEventListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(@NonNull DataSnapshot snapshot) {
+            replaceAll(snapshot);
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError error) {
+            Log.w(TAG, "cancelled", error.toException());
+        }
+    };
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -110,11 +130,9 @@ public class ProductsActivity extends AppCompatActivity implements ProductListAd
     protected void onStart() {
         super.onStart();
         // check if user is signed-in
-        mUser = mAuth.getCurrentUser();
-        if (mUser != null) {
-            // TODO update UI, show user is signed-in
-        } else {
-            // TODO update UI, show user is NOT signed-in
+        if (mAuth.getCurrentUser() == null) {
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
         }
     }
 
@@ -122,29 +140,92 @@ public class ProductsActivity extends AppCompatActivity implements ProductListAd
     protected void onResume() {
         super.onResume();
         if (disposables == null) disposables = new CompositeDisposable();
+        if (mDatabase == null) mDatabase = FirebaseDatabase.getInstance().getReference();
 
+//        progressGroup.setVisibility(View.VISIBLE);
+//        disposables.add(Single.fromCallable(() -> {
+//            Log.d(TAG, "Fetching product entries");
+//            return AppDatabaseImpl.getInstance(getApplicationContext()).products().getAll();
+//        }).observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io()).subscribe(list -> {
+//            progressGroup.setVisibility(View.GONE);
+//            Log.d(TAG, "Returned with list size=" + list.size());
+//            adapter.replaceAll(list);
+//            productList = list;
+//            tvNoProducts.setVisibility(list.isEmpty() ? View.VISIBLE : View.GONE);
+//        }, err -> {
+//            progressGroup.setVisibility(View.GONE);
+//            Log.e(TAG, "Database error: " + err);
+//            dialogBuilder.setTitle("Database Error")
+//                    .setMessage("Error while fetching product entries: " + err)
+//                    .setPositiveButton("Dismiss", (dialog, which) -> dialog.dismiss());
+//            dialogBuilder.create().show();
+//        }));
+
+        if (mProductsRef == null) {
+            mProductsRef = mDatabase.child("products");
+            mProductsRef.addValueEventListener(valueEventListener);
+        }
+    }
+
+    private void replaceAll(DataSnapshot snapshot) {
         progressGroup.setVisibility(View.VISIBLE);
         disposables.add(Single.fromCallable(() -> {
-            Log.d(TAG, "Fetching product entries");
-            return AppDatabaseImpl.getInstance(getApplicationContext()).products().getAll();
-        }).observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io()).subscribe(list -> {
+            Log.d(TAG, "Deleting all products.");
+            return AppDatabaseImpl.getInstance(getApplicationContext()).products().deleteAll();
+        }).observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io()).subscribe(rows -> {
+            Log.d(TAG, "deleted " + rows + " rows");
             progressGroup.setVisibility(View.GONE);
-            Log.d(TAG, "Returned with list size=" + list.size());
-            adapter.replaceAll(list);
-            productList = list;
-            tvNoProducts.setVisibility(list.isEmpty() ? View.VISIBLE : View.GONE);
+            processSnapshot(snapshot);
         }, err -> {
+            Log.e(TAG, "database error: " + err);
             progressGroup.setVisibility(View.GONE);
-            Log.e(TAG, "Database error: " + err);
-            dialogBuilder.setTitle("Database Error")
-                    .setMessage("Error while fetching product entries: " + err)
-                    .setPositiveButton("Dismiss", (dialog, which) -> dialog.dismiss());
-            dialogBuilder.create().show();
+        }));
+    }
+
+    private void processSnapshot(DataSnapshot snapshot) {
+        List<Product> list = new ArrayList<>();
+        for (DataSnapshot postSnapshot : snapshot.getChildren()) {
+            ProductEntry entry = postSnapshot.getValue(ProductEntry.class);
+            if (entry != null) {
+                Product product = new Product();
+                product.productId = entry.id;
+                product.fkBrandId = entry.brandId;
+                product.fkCategoryId = entry.categoryId;
+                product.fkSupplierId = entry.supplierId;
+                product.productName = entry.name;
+                product.price = entry.price;
+                product.criticalLevel = entry.criticalLevel;
+                product.productDescription = entry.description;
+                list.add(product);
+            }
+        }
+        addAll(list);
+        mProductsRef.removeEventListener(valueEventListener);
+    }
+
+    private void addAll(List<Product> products) {
+        progressGroup.setVisibility(View.VISIBLE);
+        disposables.add(Single.fromCallable(() -> {
+           int count = 0;
+            AppDatabase database = AppDatabaseImpl.getInstance(getApplicationContext());
+            for (Product product : products) {
+                database.products().insert(product);
+                count++;
+            }
+            return count;
+        }).observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io()).subscribe(count -> {
+            Log.d(TAG, "added " + count + " products");
+            progressGroup.setVisibility(View.GONE);
+            adapter.replaceAll(products);
+            productList = products;
+            tvNoProducts.setVisibility(products.isEmpty() ? View.VISIBLE : View.INVISIBLE);
+        }, err -> {
+            Log.e(TAG, "database error: " + err);
+            progressGroup.setVisibility(View.GONE);
         }));
     }
 
     private void syncData() {
-        Firebase firebase = Firebase.INSTANCE;
     }
 
     @Override
@@ -152,35 +233,6 @@ public class ProductsActivity extends AppCompatActivity implements ProductListAd
         // TODO view product
     }
 
-    // TODO
-    private void register(String email, String password) {
-        mAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, task -> {
-                    if (task.isSuccessful()) {
-                        Log.d(TAG, "Registration Success");
-                        mUser = mAuth.getCurrentUser();
-                        // TODO display info
-                    } else {
-                        Log.w(TAG, "Registration Failure", task.getException());
-                        Toast.makeText(this, "Authentication Failed", Toast.LENGTH_SHORT).show();
-                    }
-                });
-    }
-
-    // TODO
-    private void signIn(String email, String password) {
-        mAuth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, task -> {
-                    if (task.isSuccessful()) {
-                        Log.d(TAG, "Sign In Success");
-                        mUser = mAuth.getCurrentUser();
-                        // TODO display info
-                    } else {
-                        Log.w(TAG, "Sign In Failure", task.getException());
-                        Toast.makeText(this, "Authentication Failed", Toast.LENGTH_SHORT).show();
-                    }
-                });
-    }
 
     private void onSearch(String query) {
         List<Product> filteredList = filter(productList, query);

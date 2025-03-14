@@ -1,5 +1,6 @@
 package io.zak.delivery;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -14,6 +15,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,12 +51,17 @@ public class StocksActivity extends AppCompatActivity implements StockListAdapte
     private CompositeDisposable disposables;
     private AlertDialog.Builder dialogBuilder;
 
+    private FirebaseAuth mAuth;
+    private DatabaseReference mDatabase;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stocks);
         getWidgets();
         setListeners();
+        mAuth = FirebaseAuth.getInstance();
+        mDatabase = FirebaseDatabase.getInstance().getReference();
     }
 
     private void getWidgets() {
@@ -96,40 +107,57 @@ public class StocksActivity extends AppCompatActivity implements StockListAdapte
         super.onResume();
         if (disposables == null) disposables = new CompositeDisposable();
 
-        // get vehicle id
-        int vehicleId = getIntent().getIntExtra("vehicle_id", -1);
-        if (vehicleId == -1) {
-            dialogBuilder.setTitle("Invalid")
-                    .setMessage("Unknown vehicle id.")
-                    .setPositiveButton("Dismiss", (dialog, which) -> {
-                        dialog.dismiss();
-                        goBack();
-                    });
-            dialogBuilder.create().show();
+        // check signed in user
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user == null) {
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
             return;
         }
 
-        progressGroup.setVisibility(View.VISIBLE);
-        disposables.add(Single.fromCallable(() -> {
-            Log.d(TAG, "Retrieving vehicle stock entries");
-            return AppDatabaseImpl.getInstance(getApplicationContext()).vehicleStocks().getVehicleStocks(vehicleId);
-        }).observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io()).subscribe(list -> {
-            Log.d(TAG, "Returned with list size=" + list.size());
-            progressGroup.setVisibility(View.GONE);
-            adapter.replaceAll(list);
-            vehicleStockList = list;
-            tvNoStocks.setVisibility(list.isEmpty() ? View.VISIBLE : View.GONE);
-        }, err -> {
-            Log.e(TAG, "Database error: " + err);
-            progressGroup.setVisibility(View.GONE);
-            dialogBuilder.setTitle("Database Error")
-                    .setMessage("Error while retrieving vehicle stock entries: " + err)
-                    .setPositiveButton("Dismiss", (dialog, which) -> {
-                        dialog.dismiss();
-                        goBack();
-                    });
-            dialogBuilder.create().show();
-        }));
+        // check if there is an assigned vehicle for the current user
+//        progressGroup.setVisibility(View.VISIBLE);
+//        mDatabase.child("assigned_vehicles").child(user.getUid()).get()
+//                .addOnCompleteListener(this, task -> {
+//
+//                });
+
+        // TODO if VehicleEntry exists, load all stocks of vehicle
+
+//        // get vehicle id
+//        int vehicleId = getIntent().getIntExtra("vehicle_id", -1);
+//        if (vehicleId == -1) {
+//            dialogBuilder.setTitle("Invalid")
+//                    .setMessage("Unknown vehicle id.")
+//                    .setPositiveButton("Dismiss", (dialog, which) -> {
+//                        dialog.dismiss();
+//                        goBack();
+//                    });
+//            dialogBuilder.create().show();
+//            return;
+//        }
+//
+//        progressGroup.setVisibility(View.VISIBLE);
+//        disposables.add(Single.fromCallable(() -> {
+//            Log.d(TAG, "Retrieving vehicle stock entries");
+//            return AppDatabaseImpl.getInstance(getApplicationContext()).vehicleStocks().getVehicleStocks(vehicleId);
+//        }).observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io()).subscribe(list -> {
+//            Log.d(TAG, "Returned with list size=" + list.size());
+//            progressGroup.setVisibility(View.GONE);
+//            adapter.replaceAll(list);
+//            vehicleStockList = list;
+//            tvNoStocks.setVisibility(list.isEmpty() ? View.VISIBLE : View.GONE);
+//        }, err -> {
+//            Log.e(TAG, "Database error: " + err);
+//            progressGroup.setVisibility(View.GONE);
+//            dialogBuilder.setTitle("Database Error")
+//                    .setMessage("Error while retrieving vehicle stock entries: " + err)
+//                    .setPositiveButton("Dismiss", (dialog, which) -> {
+//                        dialog.dismiss();
+//                        goBack();
+//                    });
+//            dialogBuilder.create().show();
+//        }));
     }
 
     @Override

@@ -1,5 +1,6 @@
 package io.zak.delivery.adapters;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -94,7 +95,10 @@ public class ProductListAdapter extends RecyclerView.Adapter<ProductListAdapter.
         if (product != null) {
             holder.name.setText(product.productName);
             holder.price.setText(Utils.toStringMoneyFormat(product.price));
-            if (product.productDescription != null) holder.description.setText(product.productDescription);
+            Log.d("adapter", product.productDescription);
+            if (product.productDescription != null && !product.productDescription.isBlank()) {
+                holder.description.setText(product.productDescription);
+            }
         }
     }
 
