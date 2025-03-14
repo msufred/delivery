@@ -32,6 +32,7 @@ import io.zak.delivery.adapters.StockListAdapter;
 import io.zak.delivery.data.AppDatabaseImpl;
 import io.zak.delivery.data.entities.VehicleStock;
 import io.zak.delivery.data.relations.VehicleStockDetail;
+import io.zak.delivery.firebase.AssignedVehicleEntry;
 
 public class StocksActivity extends AppCompatActivity implements StockListAdapter.OnItemClickListener {
 
@@ -108,6 +109,7 @@ public class StocksActivity extends AppCompatActivity implements StockListAdapte
         if (disposables == null) disposables = new CompositeDisposable();
 
         // check signed in user
+        Log.d(TAG, "checking signed-in user");
         FirebaseUser user = mAuth.getCurrentUser();
         if (user == null) {
             startActivity(new Intent(this, LoginActivity.class));
@@ -116,11 +118,25 @@ public class StocksActivity extends AppCompatActivity implements StockListAdapte
         }
 
         // check if there is an assigned vehicle for the current user
-//        progressGroup.setVisibility(View.VISIBLE);
-//        mDatabase.child("assigned_vehicles").child(user.getUid()).get()
-//                .addOnCompleteListener(this, task -> {
-//
-//                });
+        Log.d(TAG, "checking assigned vehicle");
+        progressGroup.setVisibility(View.VISIBLE);
+        mDatabase.child("assigned_vehicles").child(user.getUid()).get()
+                .addOnCompleteListener(this, task -> {
+                    progressGroup.setVisibility(View.GONE);
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "success");
+                        AssignedVehicleEntry entry = task.getResult().getValue(AssignedVehicleEntry.class);
+                        if (entry != null) {
+                            // fetch items
+                            fetchStocks(entry.vehicleId);
+                        } else {
+                            // TODO hide action buttons
+                            dialogBuilder.setMessage("No vehicle assigned.")
+                                    .setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
+                            dialogBuilder.create().show();
+                        }
+                    }
+                });
 
         // TODO if VehicleEntry exists, load all stocks of vehicle
 
@@ -158,6 +174,10 @@ public class StocksActivity extends AppCompatActivity implements StockListAdapte
 //                    });
 //            dialogBuilder.create().show();
 //        }));
+    }
+
+    private void fetchStocks(int vehicleId) {
+
     }
 
     @Override
