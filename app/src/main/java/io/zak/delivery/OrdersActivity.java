@@ -1,5 +1,6 @@
 package io.zak.delivery;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -15,6 +16,11 @@ import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +33,7 @@ import io.zak.delivery.data.AppDatabase;
 import io.zak.delivery.data.AppDatabaseImpl;
 import io.zak.delivery.data.entities.User;
 import io.zak.delivery.data.relations.OrderDetail;
+import io.zak.delivery.firebase.AssignedVehicleEntry;
 
 public class OrdersActivity extends AppCompatActivity implements OrderListAdapter.OnItemClickListener {
 
@@ -45,7 +52,10 @@ public class OrdersActivity extends AppCompatActivity implements OrderListAdapte
     private CompositeDisposable disposables;
     private AlertDialog.Builder dialogBuilder;
 
-    private User mUser; // current user/employee/driver
+    private FirebaseAuth mAuth;
+    private FirebaseUser mUser;
+    private DatabaseReference mDatabase;
+    private AssignedVehicleEntry vehicleEntry;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -53,6 +63,8 @@ public class OrdersActivity extends AppCompatActivity implements OrderListAdapte
         setContentView(R.layout.activity_orders);
         getWidgets();
         setListeners();
+        mAuth = FirebaseAuth.getInstance();
+        mDatabase = FirebaseDatabase.getInstance().getReference();
     }
 
     private void getWidgets() {
@@ -72,6 +84,7 @@ public class OrdersActivity extends AppCompatActivity implements OrderListAdapte
 
     private void setListeners() {
         btnBack.setOnClickListener(v -> goBack());
+
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -84,8 +97,12 @@ public class OrdersActivity extends AppCompatActivity implements OrderListAdapte
                 return false;
             }
         });
+
         btnAdd.setOnClickListener(v -> {
-            // TODO
+            Intent intent = new Intent(this, AddOrderActivity.class);
+            intent.putExtra("user_id", vehicleEntry.userId);
+            intent.putExtra("vehicle_id", vehicleEntry.vehicleId);
+            startActivity(intent);
         });
     }
 
@@ -94,30 +111,60 @@ public class OrdersActivity extends AppCompatActivity implements OrderListAdapte
         super.onResume();
         if (disposables == null) disposables = new CompositeDisposable();
 
-        AppDatabase database = AppDatabaseImpl.getInstance(getApplicationContext());
+        // check user
+        mUser = mAuth.getCurrentUser();
+        if (mUser == null) {
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return;
+        }
+
+        // get assigned vehicle
+        progressGroup.setVisibility(View.VISIBLE);
+        mDatabase.child("assigned_vehicles").child(mUser.getUid()).get()
+                .addOnCompleteListener(this, task -> {
+                    progressGroup.setVisibility(View.GONE);
+                    if (task.isSuccessful()) {
+                        vehicleEntry = task.getResult().getValue(AssignedVehicleEntry.class);
+                        if (vehicleEntry == null) {
+                            dialogBuilder.setTitle("Invalid")
+                                    .setMessage("No assigned vehicle!")
+                                    .setPositiveButton("OK", (dialog, which) -> {
+                                        dialog.dismiss();
+                                        goBack();
+                                    });
+                            dialogBuilder.create().show();
+                        } else {
+                            fetchOrders();
+                        }
+                    } else {
+                        Log.w(TAG, "failed to get assigned vehicle", task.getException());
+                        dialogBuilder.create().show();
+                        dialogBuilder.setTitle("Error")
+                                .setMessage(task.getException().toString())
+                                .setPositiveButton("OK", (dialog, which) -> {
+                                    dialog.dismiss();
+                                    goBack();
+                                });
+                        goBack();
+                    }
+                });
+    }
+
+    private void fetchOrders() {
         progressGroup.setVisibility(View.VISIBLE);
         disposables.add(Single.fromCallable(() -> {
-            Log.d(TAG, "Retrieving user info");
-            return database.users().getUserById(Utils.getLoginId(this));
-        }).flatMap(users -> {
-            Log.d(TAG, "Returned with users=" + users.size());
-            if (!users.isEmpty()) mUser = users.get(0);
-            // return all orders
-            return Single.fromCallable(() -> database.orders().getOrdersWithDetail());
-        }).observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io()).subscribe(orders -> {
-            Log.d(TAG, "Returned with orders=" + orders.size());
-            orderDetailList = orders;
-            adapter.replaceAll(orders);
-            tvNoOrders.setVisibility(orders.isEmpty() ? View.VISIBLE : View.GONE);
+            Log.d(TAG, "fetch order entries");
+            return AppDatabaseImpl.getInstance(getApplicationContext()).orders().getOrdersWithDetail();
+        }).observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io()).subscribe(list -> {
+            Log.d(TAG, "returned with list size=" + list.size());
+            progressGroup.setVisibility(View.GONE);
+            adapter.replaceAll(list);
+            orderDetailList = list;
+            tvNoOrders.setVisibility(list.isEmpty() ? View.VISIBLE : View.INVISIBLE);
         }, err -> {
-            Log.e(TAG, "Database error: " + err);
-            dialogBuilder.setTitle("Database Error")
-                    .setMessage("Error while retrieving user info and list of orders: " + err)
-                    .setPositiveButton("Dismiss", (dialog, which) -> {
-                        dialog.dismiss();
-                        goBack();
-                    });
-            dialogBuilder.create().show();
+            Log.e(TAG, "database error: " + err);
+            progressGroup.setVisibility(View.GONE);
         }));
     }
 

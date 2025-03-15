@@ -6,9 +6,13 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,6 +24,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.journeyapps.barcodescanner.ScanContract;
+import com.journeyapps.barcodescanner.ScanOptions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,17 +39,20 @@ import io.zak.delivery.data.AppDatabaseImpl;
 import io.zak.delivery.data.entities.VehicleStock;
 import io.zak.delivery.data.relations.VehicleStockDetail;
 import io.zak.delivery.firebase.AssignedVehicleEntry;
+import io.zak.delivery.firebase.VehicleEntry;
 
 public class StocksActivity extends AppCompatActivity implements StockListAdapter.OnItemClickListener {
 
     private static final String TAG = "Stocks";
 
     // widgets
+    private TextView title;
     private ImageButton btnBack;
     private SearchView searchView;
     private RecyclerView recyclerView;
     private TextView tvNoStocks;
     private Button btnAdd, btnScan;
+    private LinearLayout actionGroup;
     private RelativeLayout progressGroup;
 
     private StockListAdapter adapter;
@@ -52,8 +61,22 @@ public class StocksActivity extends AppCompatActivity implements StockListAdapte
     private CompositeDisposable disposables;
     private AlertDialog.Builder dialogBuilder;
 
+    // for QR Code scanning
+    private ActivityResultLauncher<ScanOptions> qrCodeLauncher;
+    private ScanOptions scanOptions;
+
+    // scan result variables
+    public int deliveryOrderId;
+    public int warehouseStockId;    // warehouse the stock's belongs/stored
+    public int productId;           // product details
+    public String productName;      //
+    public double price;            //
+    public int quantity;            // quantity from delivery order item
+    public double subtotal;         // subtotal from delivery order item
+
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
+    private AssignedVehicleEntry mAssignedVehicle;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -63,15 +86,26 @@ public class StocksActivity extends AppCompatActivity implements StockListAdapte
         setListeners();
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
+
+        // register qrCodeLauncher
+        qrCodeLauncher = registerForActivityResult(new ScanContract(), result -> {
+            if (result.getContents() != null) {
+                processScanResult(result.getContents());
+            } else {
+                Toast.makeText(this, "QR Code Scan Cancelled", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void getWidgets() {
+        title = findViewById(R.id.title);
         btnBack = findViewById(R.id.btn_back);
         searchView = findViewById(R.id.search_view);
         recyclerView = findViewById(R.id.recycler_view);
         tvNoStocks = findViewById(R.id.tv_no_stocks);
         btnAdd = findViewById(R.id.btn_add);
         btnScan = findViewById(R.id.btn_scan);
+        actionGroup = findViewById(R.id.action_group);
         progressGroup = findViewById(R.id.progress_group);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -95,12 +129,12 @@ public class StocksActivity extends AppCompatActivity implements StockListAdapte
                 return false;
             }
         });
+
         btnAdd.setOnClickListener(v -> {
-            // TODO
+            startActivity(new Intent(this, AddStockActivity.class));
         });
-        btnScan.setOnClickListener(v -> {
-            // TODO
-        });
+
+        btnScan.setOnClickListener(v -> qrCodeLauncher.launch(getScanOptions()));
     }
 
     @Override
@@ -125,59 +159,77 @@ public class StocksActivity extends AppCompatActivity implements StockListAdapte
                     progressGroup.setVisibility(View.GONE);
                     if (task.isSuccessful()) {
                         Log.d(TAG, "success");
-                        AssignedVehicleEntry entry = task.getResult().getValue(AssignedVehicleEntry.class);
-                        if (entry != null) {
+                        mAssignedVehicle = task.getResult().getValue(AssignedVehicleEntry.class);
+                        if (mAssignedVehicle != null) {
+                            displayInfo(mAssignedVehicle);
                             // fetch items
-                            fetchStocks(entry.vehicleId);
+                            fetchStocks(mAssignedVehicle.vehicleId);
                         } else {
-                            // TODO hide action buttons
+                            actionGroup.setVisibility(View.GONE); // hide action buttons
                             dialogBuilder.setMessage("No vehicle assigned.")
                                     .setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
                             dialogBuilder.create().show();
                         }
                     }
                 });
+    }
 
-        // TODO if VehicleEntry exists, load all stocks of vehicle
-
-//        // get vehicle id
-//        int vehicleId = getIntent().getIntExtra("vehicle_id", -1);
-//        if (vehicleId == -1) {
-//            dialogBuilder.setTitle("Invalid")
-//                    .setMessage("Unknown vehicle id.")
-//                    .setPositiveButton("Dismiss", (dialog, which) -> {
-//                        dialog.dismiss();
-//                        goBack();
-//                    });
-//            dialogBuilder.create().show();
-//            return;
-//        }
-//
-//        progressGroup.setVisibility(View.VISIBLE);
-//        disposables.add(Single.fromCallable(() -> {
-//            Log.d(TAG, "Retrieving vehicle stock entries");
-//            return AppDatabaseImpl.getInstance(getApplicationContext()).vehicleStocks().getVehicleStocks(vehicleId);
-//        }).observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io()).subscribe(list -> {
-//            Log.d(TAG, "Returned with list size=" + list.size());
-//            progressGroup.setVisibility(View.GONE);
-//            adapter.replaceAll(list);
-//            vehicleStockList = list;
-//            tvNoStocks.setVisibility(list.isEmpty() ? View.VISIBLE : View.GONE);
-//        }, err -> {
-//            Log.e(TAG, "Database error: " + err);
-//            progressGroup.setVisibility(View.GONE);
-//            dialogBuilder.setTitle("Database Error")
-//                    .setMessage("Error while retrieving vehicle stock entries: " + err)
-//                    .setPositiveButton("Dismiss", (dialog, which) -> {
-//                        dialog.dismiss();
-//                        goBack();
-//                    });
-//            dialogBuilder.create().show();
-//        }));
+    private void displayInfo(AssignedVehicleEntry assignedVehicleEntry) {
+        title.setText(String.format("%s (%s)", assignedVehicleEntry.vehicleName, assignedVehicleEntry.plateNo));
     }
 
     private void fetchStocks(int vehicleId) {
 
+    }
+
+    private ScanOptions getScanOptions() {
+        if (scanOptions == null) scanOptions = new ScanOptions();
+        scanOptions.setCaptureActivity(PortraitCaptureActivity.class);
+        scanOptions.setDesiredBarcodeFormats(ScanOptions.QR_CODE);
+        scanOptions.setCameraId(0);
+        scanOptions.setPrompt("Scan QR Code");
+        return scanOptions;
+    }
+
+    private void processScanResult(String qrCodeResult) {
+        resetScanResultValues();
+
+        // Break down text (use ; as delimiter)
+        String[] strArr = qrCodeResult.split(";");
+        for (String str : strArr) {
+            String[] arr = str.split("=");
+            String key = arr[0];
+            String value = arr[1];
+
+            switch (key) {
+                case "order_id": deliveryOrderId = Integer.parseInt(value.trim()); break;
+                case "stock_id": warehouseStockId = Integer.parseInt(value.trim()); break;
+                case "product_id": productId = Integer.parseInt(value.trim()); break;
+                case "name": productName = value; break;
+                case "price": price = Double.parseDouble(value.trim()); break;
+                case "qty": quantity = Integer.parseInt(value.trim()); break;
+                case "subtotal": subtotal = Double.parseDouble(value.trim()); break;
+                default:
+            }
+        }
+
+        // show AddStockActivity
+        startActivity(processIntent());
+    }
+
+    @NonNull
+    private Intent processIntent() {
+        Intent intent = new Intent(this, AddStockActivity.class);
+        intent.putExtra("from_scan", true);
+        intent.putExtra("vehicle_id", mAssignedVehicle.vehicleId);
+        intent.putExtra("order_id", deliveryOrderId);
+        intent.putExtra("stock_id", warehouseStockId);
+        intent.putExtra("product_id", productId);
+        intent.putExtra("name", productName);
+        intent.putExtra("price", price);
+        intent.putExtra("qty", quantity);
+        intent.putExtra("subtotal", subtotal);
+        return intent;
     }
 
     @Override
@@ -205,6 +257,16 @@ public class StocksActivity extends AppCompatActivity implements StockListAdapte
     private void goBack() {
         getOnBackPressedDispatcher().onBackPressed();
         finish();
+    }
+
+    private void resetScanResultValues() {
+        deliveryOrderId = -1;
+        warehouseStockId = -1;
+        productId = -1;
+        productName = null;
+        price = 0;
+        quantity = 0;
+        subtotal = 0;
     }
 
     @Override

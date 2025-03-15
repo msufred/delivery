@@ -71,6 +71,7 @@
 
     <!-- warehouse related -->
     <string name="warehouse">Warehouse</string>
+    <string name="warehouse_id">Warehouse ID</string>
     <string name="add_warehouse">Add Warehouse</string>
     <string name="edit_warehouse">Edit Warehouse</string>
     <string name="warehouse_details">Warehouse Details</string>
@@ -142,9 +143,12 @@
     <string name="consumer_name">Consumer Name</string>
     <string name="consumer_details">Consumer Details</string>
     <string name="no_consumers">No Consumers</string>
+    <string name="new_consumer">New Consumer</string>
+    <string name="existing">Existing</string>
 
     <!-- delivery related -->
     <string name="tracking_no">Tracking No.</string>
+    <string name="delivery_id">Delivery ID</string>
     <string name="add_delivery">Add Delivery</string>
     <string name="edit_delivery">Edit Delivery</string>
     <string name="add_delivery_item">Add Delivery Item</string>
