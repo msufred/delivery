@@ -9,8 +9,8 @@ public class Order {
     @PrimaryKey(autoGenerate = true)
     public int orderId;
     public String orNo;             // official receipt no; REQUIRED
+    public String userId;
     public int fkVehicleId;         // from assigned vehicle
-    public int fkEmployeeId;        // by assigned employee/driver
     public int fkConsumerId;
     public long dateOrdered;        // Date converted to long value (use getTime() of Date)
     public double totalAmount;      // total amount of the order
