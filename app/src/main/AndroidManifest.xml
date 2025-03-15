@@ -41,14 +41,18 @@
 
         <!-- VehicleStock related activities -->
         <activity android:name=".StocksActivity" android:parentActivityName=".HomeActivity" />
+        <activity android:name=".AddStockActivity" android:parentActivityName=".StocksActivity" />
+        <activity android:name=".PortraitCaptureActivity" android:screenOrientation="fullSensor" />
 
         <!-- Consumer-related activities -->
         <activity android:name=".ConsumersActivity" android:parentActivityName=".HomeActivity" />
         <activity android:name=".ViewConsumerActivity" android:parentActivityName=".ConsumersActivity"/>
         <activity android:name=".AddConsumerActivity" android:parentActivityName=".ConsumersActivity"/>
         <activity android:name=".EditConsumerActivity" android:parentActivityName=".ViewConsumerActivity"/>
+
         <!-- Order-related activities -->
         <activity android:name=".OrdersActivity" android:parentActivityName=".HomeActivity" />
+        <activity android:name=".AddOrderActivity" android:parentActivityName=".OrdersActivity" />
     </application>
 
 </manifest>
